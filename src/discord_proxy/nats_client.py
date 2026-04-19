@@ -23,10 +23,11 @@ def dm_subject(channel_id: str, event_type: str) -> str:
     return f"discord.dm.{channel_id}.{event_type}"
 
 
-def rest_subject(method: str, route_template: str) -> str:
+def rest_subject(method: str, route_template: str, *, classified: bool = True) -> str:
     # Replace path separators and braces so the subject is NATS-safe.
     token = route_template.strip("/").replace("/", ".").replace("{", "").replace("}", "")
-    return f"discord.rest.{method.upper()}.{token}"
+    prefix = "discord.rest" if classified else "discord.rest.unclassified"
+    return f"{prefix}.{method.upper()}.{token}"
 
 
 class NatsPublisher:

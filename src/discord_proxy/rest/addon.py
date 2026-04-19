@@ -40,7 +40,8 @@ class RestAddon:
         if flow.response is None:
             return
 
-        match = classify(flow.request.path)
+        path, _, query = flow.request.path.partition("?")
+        match = classify(path)
         if match is None:
             return
 
@@ -58,9 +59,11 @@ class RestAddon:
 
         payload: dict[str, Any] = {
             "method": flow.request.method,
-            "path": flow.request.path,
+            "path": path,
+            "query": query,
             "route_template": match.template,
             "ids": match.ids,
+            "classified": match.classified,
             "status": flow.response.status_code,
             "elapsed_ms": elapsed_ms,
             "body": body,
@@ -80,5 +83,5 @@ class RestAddon:
             user_id=user_id,
         )
 
-        subject = rest_subject(flow.request.method, match.template)
+        subject = rest_subject(flow.request.method, match.template, classified=match.classified)
         self._pub.publish(subject, envelope)
