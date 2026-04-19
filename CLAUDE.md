@@ -221,6 +221,7 @@ All three (`pytest`, `ruff check`, `mypy`) must pass before committing.
 - Normalization is pure: raw in, normalized out, no side effects.
 - Decode failures publish `discord.meta.decode_error` with the raw bytes and continue. Never kill the addon on malformed input.
 - Do not log READY or READY_SUPPLEMENTAL payloads at DEBUG. They are megabytes.
+- Keep `CLAUDE.md` and `README.md` in sync with the implementation. Any change to ports, subjects, config keys, protocol behavior, project structure, or workflow commands should be reflected in both files before committing.
 
 ## Hard Constraints
 
