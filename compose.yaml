@@ -3,7 +3,7 @@ services:
     image: nats:2.10-alpine
     command: ["-js", "-sd", "/data", "-m", "8222"]
     ports:
-      - "4222:4222"
+      - "4333:4222"
     volumes:
       - nats-data:/data
     healthcheck:

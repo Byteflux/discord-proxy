@@ -18,7 +18,7 @@ Discord client ──(TLS)──> mitmproxy + addon ──(TLS)──> Discord s
                                 └──> NATS (publish only)
 ```
 
-The Discord client runs on the host. The proxy and NATS run in Docker via `docker compose up`. During development, `nats sub "discord.>"` (against `nats://127.0.0.1:4222`) is the consumer.
+The Discord client runs on the host. The proxy and NATS run in Docker via `docker compose up`. During development, `nats sub "discord.>"` (against `nats://127.0.0.1:4333`) is the consumer.
 
 ## Discord Protocol Notes
 

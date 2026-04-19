@@ -7,7 +7,7 @@
 #   - ./src is mounted into the proxy container, so code changes only need a
 #     `docker compose restart proxy` (no rebuild). uv's editable install (.pth
 #     file in the venv) picks up the bind mount automatically.
-#   - NATS monitoring port 8222 is published for inspection / debugging.
+#   - NATS monitoring port is published on host port 8333 for inspection / debugging.
 #   - Proxy log level is bumped to DEBUG.
 
 services:
@@ -19,5 +19,4 @@ services:
 
   nats:
     ports:
-      - "4333:4222"
-      - "8222:8222"
+      - "8333:8222"

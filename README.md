@@ -62,7 +62,7 @@ Then launch Discord with `--proxy-server=http://127.0.0.1:8765`. See `CLAUDE.md`
 
 Tail events from the host:
 ```sh
-nats sub --server=nats://127.0.0.1:4222 "discord.>"
+nats sub --server=nats://127.0.0.1:4333 "discord.>"
 ```
 
 ## Event envelope
