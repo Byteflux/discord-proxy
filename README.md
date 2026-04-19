@@ -152,7 +152,7 @@ The `examples/` directory contains standalone PEP 723 scripts demonstrating how 
 ```sh
 uv run --script examples/subject_tree.py              # live scrollable subject tree
 uv run --script examples/firehose.py                  # colored event tail
-uv run --script examples/rate_meter.py                # events/sec table with sparklines
+uv run --script examples/rate_meter.py                # subject tree with per-node events/sec and sparklines
 uv run --script examples/schema_sniff.py              # live inferred payload schemas
 uv run --script examples/rest_classify_sniff.py       # rank unclassified REST routes
 uv run --script examples/envelope_peek.py <subject>   # pretty-print one event

@@ -52,7 +52,7 @@ discord_proxy/
 │   ├── subject_tree.py       # live scrollable subject tree with name resolution
 │   ├── firehose.py           # colored one-line-per-event tail
 │   ├── envelope_peek.py      # wait for one event, pretty-print it
-│   ├── rate_meter.py         # live events/sec table with sparklines
+│   ├── rate_meter.py         # live subject-tree with per-node events/sec and sparklines
 │   ├── schema_sniff.py       # infer and display payload schemas; dump to md/ts/json
 │   ├── rest_classify_sniff.py # rank unclassified REST routes and propose _add() entries
 │   └── replay.py             # record events to JSONL and replay with original timing
