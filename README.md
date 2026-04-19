@@ -138,4 +138,26 @@ uv run mitmdump -w capture.flow
 uv run mitmdump -r capture.flow -s src/discord_proxy/addon.py
 ```
 
-Do not commit `.flow` fixtures containing real traffic from other users without scrubbing them first. `.flow` is gitignored by default.
+Do not commit `.flow` or `.jsonl` fixtures containing real traffic from other users without scrubbing them first. Both extensions are gitignored by default.
+
+## Examples
+
+The `examples/` directory contains standalone PEP 723 scripts demonstrating how to consume the NATS stream. Each runs without touching the project venv:
+
+```sh
+uv run --script examples/subject_tree.py              # live scrollable subject tree
+uv run --script examples/firehose.py                  # colored event tail
+uv run --script examples/rate_meter.py                # events/sec table with sparklines
+uv run --script examples/schema_sniff.py              # live inferred payload schemas
+uv run --script examples/envelope_peek.py <subject>   # pretty-print one event
+uv run --script examples/replay.py record out.jsonl   # save a session
+uv run --script examples/replay.py play out.jsonl     # replay with original timing
+```
+
+`schema_sniff.py` can dump the inferred schemas to a file on exit for reference documentation:
+
+```sh
+uv run --script examples/schema_sniff.py --format ts --output docs/schemas.ts
+uv run --script examples/schema_sniff.py --format md --output docs/schemas.md
+uv run --script examples/schema_sniff.py --format json --output docs/schemas.json
+```

@@ -48,6 +48,13 @@ discord_proxy/
 │       ├── nats_client.py    # async NATS publisher
 │       ├── envelope.py       # shared event envelope
 │       └── config.py
+├── examples/                 # standalone PEP 723 consumer scripts
+│   ├── subject_tree.py       # live scrollable subject tree with name resolution
+│   ├── firehose.py           # colored one-line-per-event tail
+│   ├── envelope_peek.py      # wait for one event, pretty-print it
+│   ├── rate_meter.py         # live events/sec table with sparklines
+│   ├── schema_sniff.py       # infer and display payload schemas; dump to md/ts/json
+│   └── replay.py             # record events to JSONL and replay with original timing
 └── tests/
 ```
 
@@ -239,4 +246,4 @@ If a feature needs any of these, it does not belong in this project.
 - Discord updates may rewrite the autostart configuration and strip the proxy flag. On Windows this affects the Run registry entry. Check after updates.
 - On macOS, the autoUpdater bypasses the proxy flag entirely. `SKIP_HOST_UPDATE` in settings.json is required for proxying to work at all on the main app; if Discord updates itself despite this, re-verify the setting.
 - Gateway reconnects are routine. Each new WebSocket gets a fresh `ZstdStreamDecoder`; do not share decoder state across connections.
-- Do not commit `.flow` fixtures containing real message content from other users. Synthesize or anonymize before committing.
+- Do not commit `.flow` or `.jsonl` fixtures containing real message content from other users. Both extensions are gitignored by default. `examples/replay.py` writes `.jsonl` recordings of live NATS traffic; synthesize or anonymize before sharing them.
