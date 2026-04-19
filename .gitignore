@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.log
+*.flow
+discord-proxy.toml
+
+# Claude Code local files
+.claude/settings.local.json
+
+# Local Docker Compose overrides
+compose.override.yaml

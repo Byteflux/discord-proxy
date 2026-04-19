@@ -1,0 +1,23 @@
+# Local dev overrides. Copy to compose.override.yaml to activate; Docker Compose
+# auto-merges it on top of compose.yaml.
+#
+#   cp compose.override.example.yaml compose.override.yaml
+#
+# Once active:
+#   - ./src is mounted into the proxy container, so code changes only need a
+#     `docker compose restart proxy` (no rebuild). uv's editable install (.pth
+#     file in the venv) picks up the bind mount automatically.
+#   - NATS monitoring port 8222 is published for inspection / debugging.
+#   - Proxy log level is bumped to DEBUG.
+
+services:
+  proxy:
+    volumes:
+      - ./src:/app/src
+    environment:
+      DISCORD_PROXY_LOG_LEVEL: DEBUG
+
+  nats:
+    ports:
+      - "4333:4222"
+      - "8222:8222"

@@ -1,0 +1,53 @@
+services:
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "4222:4222"
+    volumes:
+      - nats-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    restart: unless-stopped
+
+  nats-init:
+    image: natsio/nats-box:latest
+    depends_on:
+      nats:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        nats --server=nats://nats:4222 stream info discord >/dev/null 2>&1 || \
+        nats --server=nats://nats:4222 stream add discord \
+          --subjects='discord.>' \
+          --max-age=7d \
+          --max-bytes=1GB \
+          --storage=file \
+          --retention=limits \
+          --discard=old \
+          --replicas=1 \
+          --defaults
+    restart: "no"
+
+  proxy:
+    build: .
+    ports:
+      - "8765:8080"
+    volumes:
+      - ${HOME:-${USERPROFILE}}/.mitmproxy:/root/.mitmproxy
+    environment:
+      DISCORD_PROXY_NATS_URL: nats://nats:4222
+    depends_on:
+      nats:
+        condition: service_healthy
+      nats-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  nats-data:
