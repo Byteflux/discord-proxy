@@ -12,3 +12,6 @@ discord-proxy.toml
 
 # Local Docker Compose overrides
 compose.override.yaml
+
+# Generated schema dumps
+docs/schemas.*
