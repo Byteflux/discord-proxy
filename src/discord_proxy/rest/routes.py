@@ -66,6 +66,11 @@ _add(
     ["guild_id"],
 )
 _add(
+    r"^/api/v\d+/users/@me/guilds$",
+    "/users/@me/guilds",
+    [],
+)
+_add(
     r"^/api/v\d+/users/(\d+|@me)$",
     "/users/{user_id}",
     ["user_id"],
