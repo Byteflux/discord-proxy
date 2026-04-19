@@ -73,6 +73,40 @@ def test_non_api_path_not_published() -> None:
     assert len(pub.published) == 0
 
 
+def test_body_ids_supplement_missing_envelope_ids() -> None:
+    pub = _FakePublisher()
+    addon = RestAddon(pub)
+    flow = _make_flow(
+        "/api/v9/users/@me/billing/subscriptions",
+        body={"id": "991914835912695909", "user_id": "127637528961482753", "type": 1},
+    )
+    addon.request(flow)
+    addon.response(flow)
+
+    assert len(pub.published) == 1
+    _, envelope = pub.published[0]
+    assert envelope["user_id"] == "127637528961482753"
+    assert envelope["guild_id"] is None
+    assert envelope["channel_id"] is None
+
+
+def test_body_ids_do_not_override_url_ids() -> None:
+    pub = _FakePublisher()
+    addon = RestAddon(pub)
+    flow = _make_flow(
+        "/api/v9/guilds/111111111111111111/onboarding-responses",
+        method="PUT",
+        body={"guild_id": "999999999999999999", "user_id": "127637528961482753"},
+    )
+    addon.request(flow)
+    addon.response(flow)
+
+    assert len(pub.published) == 1
+    _, envelope = pub.published[0]
+    assert envelope["guild_id"] == "111111111111111111"  # from URL, not body
+    assert envelope["user_id"] == "127637528961482753"  # from body (not in URL)
+
+
 def test_query_string_stripped_from_route_template() -> None:
     pub = _FakePublisher()
     addon = RestAddon(pub)

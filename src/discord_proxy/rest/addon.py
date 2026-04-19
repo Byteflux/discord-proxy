@@ -73,6 +73,14 @@ class RestAddon:
         channel_id = match.ids.get("channel_id")
         user_id = match.ids.get("user_id")
 
+        if isinstance(body, dict):
+            if guild_id is None:
+                guild_id = body.get("guild_id") or None
+            if channel_id is None:
+                channel_id = body.get("channel_id") or None
+            if user_id is None:
+                user_id = body.get("user_id") or None
+
         envelope = make_envelope(
             "rest",
             flow.request.method.upper(),
