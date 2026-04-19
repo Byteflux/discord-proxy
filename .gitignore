@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 *.log
 *.flow
+*.jsonl
 discord-proxy.toml
 
 # Claude Code local files
