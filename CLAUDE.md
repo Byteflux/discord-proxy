@@ -54,6 +54,7 @@ discord_proxy/
 │   ├── envelope_peek.py      # wait for one event, pretty-print it
 │   ├── rate_meter.py         # live events/sec table with sparklines
 │   ├── schema_sniff.py       # infer and display payload schemas; dump to md/ts/json
+│   ├── rest_classify_sniff.py # rank unclassified REST routes and propose _add() entries
 │   └── replay.py             # record events to JSONL and replay with original timing
 └── tests/
 ```
@@ -86,8 +87,13 @@ discord.gateway.<event_type_lowercase>
 discord.guild.<guild_id>.channel.<channel_id>.<EVENT_TYPE>
 discord.dm.<channel_id>.<EVENT_TYPE>
 discord.rest.<METHOD>.<route_template>
+discord.rest.unclassified.<METHOD>.<route_template>
 discord.meta.<addon_event>
 ```
+
+Classified REST events match a known route pattern; their payload includes semantic `ids` and `"classified": true`. Unclassified events use a generic template (snowflake IDs replaced with `{id}`, other segments kept literal) and carry `"classified": false` with null `guild_id`/`channel_id`/`user_id` on the envelope.
+
+REST `payload` fields: `method`, `path` (path only, no query string), `query` (query string without `?`, or `""`), `route_template`, `ids` (map of named snowflake IDs), `classified`, `status`, `elapsed_ms`, `body` (parsed JSON or null).
 
 Publish each event to both the flat `discord.gateway.<type>` subject and the scoped subject. Consumers filter with wildcards.
 

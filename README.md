@@ -90,11 +90,16 @@ Every published event shares this shape:
 discord.gateway.<event_type_lowercase>                      # flat, all events of a type
 discord.guild.<guild_id>.channel.<channel_id>.<EVENT_TYPE>  # scoped guild events
 discord.dm.<channel_id>.<EVENT_TYPE>                        # scoped DM events
-discord.rest.<METHOD>.<route_template>                      # REST traffic
+discord.rest.<METHOD>.<route_template>                      # REST traffic (classified routes)
+discord.rest.unclassified.<METHOD>.<route_template>         # REST traffic (unrecognized routes)
 discord.meta.<addon_event>                                  # decode errors, etc.
 ```
 
 Each gateway event is published to both the flat subject and its scoped subject. Consumers filter with wildcards.
+
+Classified REST events match a known route; their payload carries semantic `ids` (`guild_id`, `channel_id`, etc.) and `"classified": true`. Unclassified events use a generic template where snowflake segments are replaced with `{id}` and publish under `discord.rest.unclassified.*`; `guild_id`/`channel_id`/`user_id` are null on the envelope.
+
+REST `payload` fields: `method`, `path` (path only, no query string), `query` (query string without `?`, or `""`), `route_template`, `ids`, `classified`, `status`, `elapsed_ms`, `body`.
 
 ## Configuration
 
@@ -149,6 +154,7 @@ uv run --script examples/subject_tree.py              # live scrollable subject 
 uv run --script examples/firehose.py                  # colored event tail
 uv run --script examples/rate_meter.py                # events/sec table with sparklines
 uv run --script examples/schema_sniff.py              # live inferred payload schemas
+uv run --script examples/rest_classify_sniff.py       # rank unclassified REST routes
 uv run --script examples/envelope_peek.py <subject>   # pretty-print one event
 uv run --script examples/replay.py record out.jsonl   # save a session
 uv run --script examples/replay.py play out.jsonl     # replay with original timing
@@ -160,4 +166,12 @@ uv run --script examples/replay.py play out.jsonl     # replay with original tim
 uv run --script examples/schema_sniff.py --format ts --output docs/schemas.ts
 uv run --script examples/schema_sniff.py --format md --output docs/schemas.md
 uv run --script examples/schema_sniff.py --format json --output docs/schemas.json
+```
+
+`rest_classify_sniff.py` tails `discord.rest.unclassified.>`, ranks templates by frequency, and infers semantic ID slot names by cross-referencing path snowflakes against response body fields. Use it to grow `src/discord_proxy/rest/routes.py`:
+
+```sh
+uv run --script examples/rest_classify_sniff.py                                    # live table
+uv run --script examples/rest_classify_sniff.py --output docs/rest-candidates.md   # markdown report on exit
+uv run --script examples/rest_classify_sniff.py --format py --output candidates.py # paste-ready _add() calls
 ```

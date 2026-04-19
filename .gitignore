@@ -15,3 +15,6 @@ compose.override.yaml
 
 # Generated schema dumps
 docs/schemas.*
+
+# Generated REST classification candidates
+docs/rest-candidates.*
