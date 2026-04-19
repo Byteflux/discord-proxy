@@ -90,16 +90,18 @@ Every published event shares this shape:
 discord.gateway.<event_type_lowercase>                      # flat, all events of a type
 discord.guild.<guild_id>.channel.<channel_id>.<EVENT_TYPE>  # scoped guild events
 discord.dm.<channel_id>.<EVENT_TYPE>                        # scoped DM events
-discord.rest.<METHOD>.<route_template>                      # REST traffic (classified routes)
-discord.rest.unclassified.<METHOD>.<route_template>         # REST traffic (unrecognized routes)
+discord.rest.<METHOD>.<route_template_tokens>               # REST traffic (classified routes)
+discord.rest.unclassified.<METHOD>.<route_template_tokens>  # REST traffic (unrecognized routes)
 discord.meta.<addon_event>                                  # decode errors, etc.
 ```
+
+The route template is tokenized for NATS: slashes become dots and `{…}` placeholders drop their braces. So `/channels/{channel_id}/messages/{message_id}` publishes as `discord.rest.GET.channels.channel_id.messages.message_id`. The literal template with braces is preserved inside the payload's `route_template` field.
 
 Each gateway event is published to both the flat subject and its scoped subject. Consumers filter with wildcards.
 
 Classified REST events match a known route; their payload carries semantic `ids` (`guild_id`, `channel_id`, etc.) and `"classified": true`. Unclassified events use a generic template where snowflake segments are replaced with `{id}` and publish under `discord.rest.unclassified.*`; `guild_id`/`channel_id`/`user_id` are null on the envelope.
 
-REST `payload` fields: `method`, `path` (path only, no query string), `query` (query string without `?`, or `""`), `route_template`, `ids`, `classified`, `status`, `elapsed_ms`, `body`.
+REST `payload` fields: `method`, `path` (path only, no query string), `query` (query string without `?`, or `""`), `route_template`, `ids`, `classified`, `status`, `elapsed_ms`, `body` (parsed JSON — object, array, or scalar — or `null` when the response was missing, empty, or not JSON).
 
 ## Configuration
 
@@ -109,6 +111,8 @@ Config is loaded from `./discord-proxy.toml` (overridable with `DISCORD_PROXY_CO
 | --- | --- | --- |
 | `nats_url` | `DISCORD_PROXY_NATS_URL` | `nats://127.0.0.1:4222` |
 | `log_level` | `DISCORD_PROXY_LOG_LEVEL` | `INFO` |
+
+The code default matches a bare `nats-server -js` running on the host. Under Docker, `compose.yaml` overrides the env var to `nats://nats:4222` inside the container network and publishes NATS on host port **4333** (host-side consumers like `nats sub` and the `examples/` scripts use that port).
 
 ## Protocol notes
 

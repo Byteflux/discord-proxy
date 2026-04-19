@@ -18,7 +18,7 @@ Discord client ──(TLS)──> mitmproxy + addon ──(TLS)──> Discord s
                                 └──> NATS (publish only)
 ```
 
-The Discord client runs on the host. The proxy and NATS run in Docker via `docker compose up`. During development, `nats sub "discord.>"` (against `nats://127.0.0.1:4333`) is the consumer.
+The Discord client runs on the host. The proxy and NATS run in Docker via `docker compose up`. In this setup NATS listens on container port 4222 but is published to the host as `nats://127.0.0.1:4333` (see `compose.yaml`), so host-side consumers — `nats sub`, the example scripts — all use port 4333. A bare `nats-server -js` started locally (no Docker) uses the NATS default 4222 instead; see the local-dev section below.
 
 ## Discord Protocol Notes
 
@@ -86,14 +86,16 @@ Keep `raw` alongside `payload`. Schema additions can be backfilled by reparsing;
 discord.gateway.<event_type_lowercase>
 discord.guild.<guild_id>.channel.<channel_id>.<EVENT_TYPE>
 discord.dm.<channel_id>.<EVENT_TYPE>
-discord.rest.<METHOD>.<route_template>
-discord.rest.unclassified.<METHOD>.<route_template>
+discord.rest.<METHOD>.<route_template_tokens>
+discord.rest.unclassified.<METHOD>.<route_template_tokens>
 discord.meta.<addon_event>
 ```
 
+`<route_template_tokens>` is the template rendered as NATS-safe tokens by `rest_subject()` in `nats_client.py`: leading slash stripped, `/` → `.`, and `{`/`}` removed. So `/channels/{channel_id}/messages/{message_id}` publishes under `discord.rest.GET.channels.channel_id.messages.message_id`. The literal `route_template` with braces intact is still available inside the payload (`route_template` field) and the envelope's `ids` map.
+
 Classified REST events match a known route pattern; their payload includes semantic `ids` and `"classified": true`. Unclassified events use a generic template (snowflake IDs replaced with `{id}`, other segments kept literal) and carry `"classified": false` with null `guild_id`/`channel_id`/`user_id` on the envelope.
 
-REST `payload` fields: `method`, `path` (path only, no query string), `query` (query string without `?`, or `""`), `route_template`, `ids` (map of named snowflake IDs), `classified`, `status`, `elapsed_ms`, `body` (parsed JSON or null).
+REST `payload` fields: `method`, `path` (path only, no query string), `query` (query string without `?`, or `""`), `route_template`, `ids` (map of named snowflake IDs), `classified`, `status`, `elapsed_ms`, `body` (parsed JSON — object, array, or scalar — or `null` when the response was missing, empty, or not JSON).
 
 Publish each event to both the flat `discord.gateway.<type>` subject and the scoped subject. Consumers filter with wildcards.
 
@@ -195,15 +197,17 @@ Modify the `.desktop` file under `~/.local/share/applications/` to persist the f
 ### Each session (all platforms, local dev)
 
 ```sh
-# Terminal 1: NATS
+# Terminal 1: NATS (listens on default port 4222)
 nats-server -js
 
-# Terminal 2: mitmproxy with the addon
+# Terminal 2: mitmproxy with the addon (reads DISCORD_PROXY_NATS_URL; default nats://127.0.0.1:4222)
 uv run mitmdump -s src/discord_proxy/addon.py
 
-# Terminal 3: tail events to verify flow
+# Terminal 3: tail events to verify flow (nats-cli defaults to 4222)
 nats sub "discord.>"
 ```
+
+The `examples/` scripts hardcode `NATS_URL = "nats://127.0.0.1:4333"` to match the Docker setup. For bare local nats-server (4222), either edit the `NATS_URL` constant at the top of the script you're running or start `nats-server -js -p 4333`.
 
 ### Testing and linting
 
@@ -225,14 +229,14 @@ uv run mitmdump -w capture.flow
 uv run mitmdump -r capture.flow -s src/discord_proxy/addon.py
 ```
 
-All three (`pytest`, `ruff check`, `mypy`) must pass before committing.
+All three (`pytest`, `ruff check`, `mypy`) must pass before committing. Note that `mypy` is scoped to `src/` and `tests/` (see `pyproject.toml`); `examples/` scripts are PEP 723 single-files and intentionally not type-checked as part of the project.
 
 ## Code Conventions
 
 - Python 3.12+. Type hints required. mypy (strict, configured in pyproject.toml) must pass.
 - Async for all I/O. Blocking in hook paths stalls the proxy.
 - Normalization is pure: raw in, normalized out, no side effects.
-- Decode failures publish `discord.meta.decode_error` with the raw bytes and continue. Never kill the addon on malformed input.
+- Decode failures publish `discord.meta.decode_error` and continue. The payload carries `flow_id` and `raw_b64` (the offending bytes base64-encoded); the envelope `raw` is `{}`. Never kill the addon on malformed input.
 - Do not log READY or READY_SUPPLEMENTAL payloads at DEBUG. They are megabytes.
 - Keep `CLAUDE.md` and `README.md` in sync with the implementation. Any change to ports, subjects, config keys, protocol behavior, project structure, or workflow commands should be reflected in both files before committing.
 
